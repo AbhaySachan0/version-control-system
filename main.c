@@ -15,9 +15,13 @@ typedef struct{
     char* ref_dir;      //.git/ref
     char* head_dir;
     char* head_file; //.git/HEAD
-                
+           
     char* index_dir;    //.git/index
 }Paths;
+
+int repo_exist(char* path){
+    return access(path,F_OK)==0;
+}
 
 static char* allocate_path(void) {
     char* p = malloc(4096);
@@ -46,7 +50,6 @@ void initialize_path(Paths *p, const char *root) {
     snprintf(p->head_dir,4096,"%s/.myvc/refs/heads",root);
     snprintf(p->head_file,4096,"%s/.myvc/HEAD",root);
     snprintf(p->index_dir,4096,"%s/.myvc/index",root);
-
     
 }
 
@@ -54,15 +57,13 @@ void make_dir(const char *path) {
     if(mkdir(path,0755) == -1){
         perror("mkdir");
         return;
-        
     }
-    printf("%s\n",path);
+    // printf("%s\n",path);
 }
-
 
 void init_repo(Paths *p) {
     
-    if(access(".myvc",F_OK)==0){
+    if(repo_exist(".myvc")){
         printf("Repo already exists\n");
         return;
     }
@@ -73,10 +74,47 @@ void init_repo(Paths *p) {
     make_dir(p->ref_dir);
     make_dir(p->head_dir);
     
-    
-    
     printf("Initialized empty repository\n");
 }
+
+void process_path(const char* path) {
+    if(access(path,F_OK)!=0){
+        perror("file");
+        return;
+    }
+
+    struct stat st;
+
+    if(stat(path,&st)==-1){
+        perror(path);
+        return;
+    }
+
+    if(S_ISREG(st.st_mode)){
+        add_file(path);
+    } else if (S_ISDIR(st.st_mode)) {
+        add_directory(path);
+    } else {
+        printf("INVALID PATH");
+    }
+}
+
+
+
+void add(int argc,char* argv[]){
+
+    if(!repo_exist(".myvc")){
+            printf("Not a repo\n");
+        return;
+    }  
+
+    for(int i=2;i<argc;i++){
+        process_path(argv[i]);
+    }
+
+    
+}
+
 
 int main(int argc, char* argv[]) {
 
@@ -89,8 +127,6 @@ int main(int argc, char* argv[]) {
     initialize_path(&p,resolved_path);
     // printf("%s\n",p.git_dir);
 
-
-
     if(argc < 2) {
         fprintf(stderr,"Usage: %s No arguments\n",argv[0]);
         return 1;
@@ -98,6 +134,9 @@ int main(int argc, char* argv[]) {
     
     if(strcmp(argv[1],"init") == 0) {
         init_repo(&p);
+    }
+    else if (strcmp(argv[1],"add")==0) {
+        add(argc,argv);
     }
     
     struct stat st;
