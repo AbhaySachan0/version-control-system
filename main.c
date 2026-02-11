@@ -138,7 +138,7 @@ void add_file(const char* path) {
     hash_content(&hex,content,size);
     //store content
 
-
+    
     //update index
 
 }
