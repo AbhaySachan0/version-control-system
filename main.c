@@ -5,6 +5,8 @@
 #include <unistd.h> // access()
 #include <sys/stat.h> // mkdir()
 #include <linux/limits.h>
+#include <fcntl.h>
+#include <openssl/sha.h>
 
 
 
@@ -75,6 +77,70 @@ void init_repo(Paths *p) {
     make_dir(p->head_dir);
     
     printf("Initialized empty repository\n");
+}
+
+int read_file(const char* path, char **content, size_t *file_size){
+    struct stat st;
+    if(stat(path,&st)==-1){
+        perror("file");
+        return -1;
+    }
+
+    size_t size = st.st_size;
+
+    int fd = open(path, O_RDONLY);
+
+    if(fd==-1) {
+        perror("file");
+        close(fd);
+        return -1;
+    }
+
+    char* buffer = malloc(size);
+    size_t total = 0;
+    while(total <size) {
+        size_t n = read(fd, buffer+total, size-total);
+        if(n<=0) {
+            perror("read");
+            close(fd);
+            return -1;
+        }
+        total += n;
+    }
+    close(fd);
+
+    *content = buffer;
+    *file_size = size;
+
+    return 0;
+}
+
+void hash_content(char* hex,char *content, size_t size) {
+    unsigned char hash[SHA_DIGEST_LENGTH];
+    SHA1((unsigned char*)content,size,hash);
+
+    for(int i=0;i<SHA_DIGEST_LENGTH;i++) {
+        sprintf(hex+(i*2), "%02x", hash[i]);
+    }
+    hex[SHA_DIGEST_LENGTH*2] = '\0';
+
+}
+
+void add_file(const char* path) {
+    char *content;
+    size_t size;
+
+    if(read_file(path, &content, &size) == -1){
+        return;
+    }
+    // hash the content
+    char hex[41];
+    hash_content(&hex,content,size);
+    //store content
+
+
+    //update index
+
 }
 
 void process_path(const char* path) {
