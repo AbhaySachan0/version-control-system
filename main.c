@@ -217,7 +217,7 @@ void add_file(const char* path) {
     blob_object(content, size, hex, &blob_buf, &blob_size);
 
     //store content
-    store_object(hex,content,size);
+    store_object(hex,blob_buf,blob_size);
     
     
     //update index
