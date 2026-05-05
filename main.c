@@ -4,7 +4,13 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <linux/limits.h>
+
+#ifdef _WIN32
+    #include <windows.h>
+    #define PATH_MAX MAX_PATH
+#else
+    #include <limits.h>
+#endif
 
 int main(int argc, char* argv[]) {
 

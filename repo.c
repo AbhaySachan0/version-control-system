@@ -6,7 +6,15 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/stat.h>
-#include <linux/limits.h>
+
+#include <dirent.h> // opendir, closedir, readdir
+
+#ifdef _WIN32
+    #include <windows.h>
+    #define PATH_MAX MAX_PATH
+#else
+    #include <limits.h>
+#endif
 
 
 int repo_exist(char* path){
