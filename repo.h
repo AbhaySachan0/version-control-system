@@ -15,3 +15,4 @@ void initialize_path(Paths *p, const char *root);
 void init_repo(Paths *p);
 int repo_exist(char* path);
 void add(int argc, char* argv[]);
+void traverse_directory(const char * path);

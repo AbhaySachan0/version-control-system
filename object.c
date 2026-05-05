@@ -60,7 +60,6 @@ void store_object(char* hex, char* content, size_t size) {
     char dir_path[PATH_MAX];
 
     snprintf(dir_path,PATH_MAX,".myvc/objects/%s",dir);
-    printf("store objects\n");
 
     if(access(dir_path,F_OK)==-1) { // folder doesn't exist
         if(mkdir(dir_path,0755)==-1) {
@@ -68,9 +67,7 @@ void store_object(char* hex, char* content, size_t size) {
             return;
         }
     }
-    
-    printf("objects\n");
-    
+        
     // file name -> after two chars
     const char* file = hex +2;
     char obj_path[PATH_MAX];
@@ -101,8 +98,6 @@ void store_object(char* hex, char* content, size_t size) {
         total += n;
     }
     close(fd);
-    printf("store objects\n");
-
 }
 
 // adding file
@@ -122,6 +117,7 @@ void add_file(const char* path) {
     blob_object(content, size, hex, &blob_buf, &blob_size);
 
     //store content
+    printf("adding %s\n", path);
     store_object(hex,blob_buf,blob_size);
     
     

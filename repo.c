@@ -77,6 +77,7 @@ void process_path(const char* path) {
     } else if (S_ISDIR(st.st_mode)) {
         // add_directory(path);
         printf("Directory\n");
+        traverse_directory(path);
     } else {
         printf("INVALID PATH");
     }
@@ -101,7 +102,7 @@ void init_repo(Paths *p) {
 void add(int argc,char* argv[]){
 
     if(!repo_exist(".myvc")){
-            printf("Not a repo\n");
+        printf("Not a repo\n");
         return;
     }  
 
@@ -110,3 +111,44 @@ void add(int argc,char* argv[]){
     }
 
 }
+
+void traverse_directory(const char * dir_path) {
+    DIR *dir = opendir(dir_path);
+    if(!dir) {
+        perror("opendir");
+        return;
+    }
+
+    struct dirent *entry;
+
+    while((entry = readdir(dir))!=NULL) {
+
+        //skip . and ..
+        if(strcmp(entry->d_name, ".")==0 || strcmp(entry->d_name,"..")==0) {
+            continue;
+        }
+        // skip repo dir
+        if(strcmp(entry->d_name,".myvc")==0) continue;
+        if(strcmp(entry->d_name,".git")==0) continue;
+
+        char full_path[PATH_MAX];
+        snprintf(full_path, PATH_MAX, "%s/%s",dir_path, entry->d_name); // entry->d_name gives only name
+
+        struct stat st;
+        if(stat(full_path, &st)==-1) {
+            perror("stat");
+            continue;
+        }
+
+        if(S_ISREG(st.st_mode)) {
+            add_file(full_path);
+        } else if(S_ISDIR(st.st_mode)) {
+            traverse_directory(full_path);
+        }
+
+    }
+
+    closedir(dir);
+
+}
+
