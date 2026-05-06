@@ -1,6 +1,7 @@
 
 #include "object.h"
 #include "utils.h"
+#include "index.h"
 
 #include <openssl/sha.h>
 #include <stdio.h>
@@ -13,12 +14,12 @@
 
 
 // SHA-1 hasing algorithm
-static void hash_content(char* hex,char *content, size_t size) {
+static void hash_content(unsigned char raw_hash[20],char* hex,char *content, size_t size) {
     unsigned char hash[SHA_DIGEST_LENGTH];
-    SHA1((unsigned char*)content,size,hash);
+    SHA1((unsigned char*)content,size,raw_hash);
 
     for(int i=0;i<SHA_DIGEST_LENGTH;i++) {
-        sprintf(hex+(i*2), "%02x", hash[i]);
+        sprintf(hex+(i*2), "%02x", raw_hash[i]);
     }
     hex[SHA_DIGEST_LENGTH*2] = '\0';
 
@@ -26,7 +27,7 @@ static void hash_content(char* hex,char *content, size_t size) {
 }
 
 // creating blob object
-void blob_object(const char* content, size_t content_size, char *hex, char** out_buf, size_t *out_size) {
+void blob_object(const char* content, size_t content_size,unsigned char raw_hash[20], char *hex, char** out_buf, size_t *out_size) {
     char header[100];
     int header_len = snprintf(header, sizeof(header), "blob %zu", content_size);
 
@@ -42,7 +43,7 @@ void blob_object(const char* content, size_t content_size, char *hex, char** out
     buffer[header_len] = '\0';
     memcpy(buffer+header_len+1, content, content_size); // cpy content to buffer
 
-    hash_content(hex,buffer,total); // hash the object into hex
+    hash_content(raw_hash,hex,buffer,total); // hash the object into hex
 
     *out_buf = buffer;
     *out_size = total;
@@ -109,22 +110,21 @@ void add_file(const char* path) {
         return;
     }
     // hash the content
+    unsigned char raw_hash[20];
     char hex[41];
 
     char *blob_buf;
     size_t blob_size;
 
-    blob_object(content, size, hex, &blob_buf, &blob_size);
+    blob_object(content, size, raw_hash, hex, &blob_buf, &blob_size);
 
     //store content
     printf("adding %s\n", path);
     store_object(hex,blob_buf,blob_size);
-    
+    update_index(path, raw_hash);
     
     //update index
     
     free(blob_buf);
     free(content); 
 }
-
-// add folders
