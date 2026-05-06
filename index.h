@@ -18,5 +18,12 @@ typedef struct {
 
 void update_index(const char *path, unsigned char hash[20]);
 
+IndexEntry* read_index(uint32_t *count);
+
+void write_index(IndexEntry *entries, uint32_t count);
+
+void free_entries(IndexEntry *entries, uint32_t count);
+
+
 #endif
 
